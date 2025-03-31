@@ -7,6 +7,7 @@ class CliParser
    private ?string $amount = null;
    private ?string $description = null;
    private ?string $id = null;
+   private ?string $month = null;
 
    public function __construct(array $argv)
    {
@@ -26,6 +27,9 @@ class CliParser
             $i++;
          } elseif ($this->args[$i] === '--id' && isset($this->args[$i + 1])) {
             $this->id = $this->args[$i + 1];
+            $i++;
+         } elseif ($this->args[$i] === '--month' && isset($this->args[$i + 1])) {
+            $this->month = $this->args[$i + 1];
             $i++;
          }
       }
@@ -49,5 +53,10 @@ class CliParser
    public function getId(): ?string
    {
       return $this->id;
+   }
+
+   public function getMonth(): ?string
+   {
+      return $this->month;
    }
 }

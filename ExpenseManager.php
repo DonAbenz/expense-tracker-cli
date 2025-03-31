@@ -153,16 +153,45 @@ class ExpenseManager
       ExpenseDisplay::print($this->expenses);
    }
 
-   public function getSummary()
+   public function getSummary(?int $month = null)
    {
       if (empty($this->expenses)) {
          echo "No expenses found." . PHP_EOL;
          return;
       }
 
-      $total = array_reduce($this->expenses, function ($carry, $expense) {
+      $currentYear = date('Y');
+      $filteredExpenses = $this->expenses;
+
+      // Filter expenses by month if a month is provided
+      if ($month !== null) {
+         if ($month < 1 || $month > 12) {
+            echo "Invalid month. Please provide a month between 1 and 12." . PHP_EOL;
+            return;
+         }
+
+         $filteredExpenses = array_filter($this->expenses, function ($expense) use ($month, $currentYear) {
+            $expenseDate = DateTime::createFromFormat('Y-m-d', $expense->getDate());
+            return $expenseDate && $expenseDate->format('Y') == $currentYear && $expenseDate->format('m') == str_pad($month, 2, '0', STR_PAD_LEFT);
+         });
+      }
+
+      if (empty($filteredExpenses)) {
+         echo $month !== null
+            ? "No expenses found for the specified month." . PHP_EOL
+            : "No expenses found." . PHP_EOL;
+         return;
+      }
+
+      $total = array_reduce($filteredExpenses, function ($carry, $expense) {
          return $carry + $expense->getAmount();
       }, 0);
+
+      if ($month !== null) {
+         $monthName = DateTime::createFromFormat('!m', $month)->format('F');
+         echo "Total expenses for $monthName $currentYear: $" . number_format($total, 2) . PHP_EOL;
+         return;
+      }
 
       echo "Total expenses: $" . number_format($total, 2) . PHP_EOL;
    }

@@ -24,7 +24,7 @@ try {
       ),
       CommandType::DELETE => $expenseManager->deleteExpense($parser->getId()),
       CommandType::LIST => $expenseManager->getAllExpenses(),
-      CommandType::SUMMARY => $expenseManager->getSummary(),
+      CommandType::SUMMARY => $expenseManager->getSummary($parser->getMonth()),
       default => print("Invalid command. Use '--help' for more information.\n"),
    };
 } catch (ValueError $e) {

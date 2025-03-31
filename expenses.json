@@ -10,5 +10,17 @@
         "description": "Dinner",
         "amount": 10,
         "date": "2025-03-31"
+    },
+    {
+        "id": 3,
+        "description": "Pamahaw",
+        "amount": 10,
+        "date": "2025-04-30"
+    },
+    {
+        "id": 4,
+        "description": "Paniudto",
+        "amount": 10,
+        "date": "2025-04-30"
     }
 ]
