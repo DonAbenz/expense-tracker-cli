@@ -4,7 +4,7 @@ class ExpenseDisplay
 {
    public static function print(array $expenses): void
    {
-       $headers = ['id', 'date', 'description', 'amount'];
+       $headers = ['id', 'date', 'description', 'category', 'amount'];
        $widths = self::calculateColumnWidths($expenses, $headers);
 
        self::printSeparatorLine($widths);

@@ -10,20 +10,24 @@ $parser = new CliParser($argv);
 $expenseManager = new ExpenseManager();
 
 try {
-   // Convert the command to an enum
    $commandType = CommandType::from($parser->getCommand());
    match ($commandType) {
       CommandType::ADD => $expenseManager->addExpense(
          $parser->getAmount(),
-         $parser->getDescription()
+         $parser->getDescription(),
+         $parser->getCategory()
       ),
       CommandType::UPDATE => $expenseManager->updateExpense(
          $parser->getId(),
          $parser->getAmount(),
          $parser->getDescription()
       ),
-      CommandType::DELETE => $expenseManager->deleteExpense($parser->getId()),
-      CommandType::LIST => $expenseManager->getAllExpenses(),
+      CommandType::DELETE => $expenseManager->deleteExpense(
+         $parser->getId()
+      ),
+      CommandType::LIST => $expenseManager->getAllExpenses(
+         $parser->getCategory()
+      ),
       CommandType::SUMMARY => $expenseManager->getSummary($parser->getMonth()),
       default => print("Invalid command. Use '--help' for more information.\n"),
    };

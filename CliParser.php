@@ -8,6 +8,7 @@ class CliParser
    private ?string $description = null;
    private ?string $id = null;
    private ?string $month = null;
+   private ?string $category = null;
 
    public function __construct(array $argv)
    {
@@ -31,32 +32,23 @@ class CliParser
          } elseif ($this->args[$i] === '--month' && isset($this->args[$i + 1])) {
             $this->month = $this->args[$i + 1];
             $i++;
+         } elseif ($this->args[$i] === '--category' && isset($this->args[$i + 1])) {
+            $this->category = $this->args[$i + 1];
+            $i++;
          }
       }
    }
 
-   public function getCommand(): ?string
+   public function __call(string $name, array $arguments)
    {
-      return $this->command;
-   }
+      if (str_starts_with($name, 'get')) {
+         $property = lcfirst(substr($name, 3));
 
-   public function getAmount(): ?string
-   {
-      return $this->amount;
-   }
+         if (property_exists($this, $property)) {
+            return $this->$property;
+         }
+      }
 
-   public function getDescription(): ?string
-   {
-      return $this->description;
-   }
-
-   public function getId(): ?string
-   {
-      return $this->id;
-   }
-
-   public function getMonth(): ?string
-   {
-      return $this->month;
+      throw new BadMethodCallException("Method $name does not exist.");
    }
 }

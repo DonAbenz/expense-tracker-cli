@@ -26,6 +26,7 @@ class ExpenseManager
             $expense['id'],
             $expense['description'],
             $expense['amount'],
+            $expense['category'],
             $expense['date']
          );
       }, $expenses);
@@ -38,7 +39,7 @@ class ExpenseManager
       return file_put_contents($this->filePath, $json) !== false;
    }
 
-   public function addExpense($amount, $description)
+   public function addExpense($amount, $description, $category = null)
    {
       if (empty($amount) || empty($description)) {
          echo "Amount and description are required." . PHP_EOL;
@@ -59,7 +60,8 @@ class ExpenseManager
       $expense = new Expense(
          $id,
          $description,
-         $amount
+         $amount,
+         $category
       );
 
       $this->expenses[] = $expense;
@@ -143,14 +145,22 @@ class ExpenseManager
       echo "Expense deleted successfully." . PHP_EOL;
    }
 
-   public function getAllExpenses()
+   public function getAllExpenses(?string $category = null)
    {
-      if (empty($this->expenses)) {
+      $filteredExpenses = $this->expenses;
+
+      if ($category !== null) {
+         $filteredExpenses = array_filter($this->expenses, function ($expense) use ($category) {
+            return $expense->getCategory() === $category;
+         });
+      }
+
+      if (empty($filteredExpenses)) {
          echo "No expenses found." . PHP_EOL;
          return;
       }
 
-      ExpenseDisplay::print($this->expenses);
+      ExpenseDisplay::print($filteredExpenses);
    }
 
    public function getSummary(?int $month = null)
