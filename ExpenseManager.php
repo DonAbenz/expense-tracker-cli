@@ -302,4 +302,34 @@ class ExpenseManager
          echo "Warning: You have exceeded your budget of $" . number_format($this->budget, 2) . " for this month!" . PHP_EOL;
       }
    }
+
+   public function exportExpensesToCSV(string $filePath = 'expenses.csv'): void
+   {
+      if (empty($this->expenses)) {
+         echo "No expenses to export." . PHP_EOL;
+         return;
+      }
+
+      $file = fopen($filePath, 'w');
+      if ($file === false) {
+         echo "Failed to create the CSV file." . PHP_EOL;
+         return;
+      }
+
+      fputcsv($file, ['ID', 'Date', 'Description', 'Category', 'Amount'], ',', '"', '\\');
+
+      foreach ($this->expenses as $expense) {
+         $data = $expense->__toArray();
+         fputcsv($file, [
+            $data['id'],
+            $data['date'],
+            $data['description'],
+            $data['category'],
+            $data['amount']
+         ], ',', '"', '\\');
+      }
+
+      fclose($file);
+      echo "Expenses exported successfully to $filePath." . PHP_EOL;
+   }
 }

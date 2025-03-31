@@ -33,6 +33,7 @@ try {
          $parser->getAmount(),
          $parser->getMonth()
       ),
+      CommandType::EXPORT => $expenseManager->exportExpensesToCSV(),
       default => print("Invalid command. Use '--help' for more information.\n"),
    };
 } catch (ValueError $e) {

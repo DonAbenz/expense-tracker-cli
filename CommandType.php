@@ -8,5 +8,6 @@ enum CommandType: string
    case LIST = 'list';
    case SUMMARY = 'summary';
    case SET_BUDGET = 'set-budget';
+   case EXPORT = 'export';
    case HELP = '--help';
 }
