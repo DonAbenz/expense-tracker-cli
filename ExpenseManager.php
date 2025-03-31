@@ -152,4 +152,18 @@ class ExpenseManager
 
       ExpenseDisplay::print($this->expenses);
    }
+
+   public function getSummary()
+   {
+      if (empty($this->expenses)) {
+         echo "No expenses found." . PHP_EOL;
+         return;
+      }
+
+      $total = array_reduce($this->expenses, function ($carry, $expense) {
+         return $carry + $expense->getAmount();
+      }, 0);
+
+      echo "Total expenses: $" . number_format($total, 2) . PHP_EOL;
+   }
 }
