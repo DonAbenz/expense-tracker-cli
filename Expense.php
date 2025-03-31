@@ -6,7 +6,7 @@ class Expense
       private int $id,
       private string $description,
       private float $amount,
-      private string $category,
+      private ?string $category,
       private ?string $date = null
    ) {
       $this->date = $date ?? date('Y-m-d');

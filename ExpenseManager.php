@@ -64,10 +64,10 @@ class ExpenseManager
       
       $id = count($this->expenses) > 0 ? end($this->expenses)->getId() + 1 : 1;
       $expense = new Expense(
-         $id,
-         $description,
-         $amount,
-         $category
+         id: $id,
+         description: $description,
+         amount: $amount,
+         category: $category !== null ? strtolower($category) : null,
       );
       
       $this->expenses[] = $expense;
@@ -80,45 +80,55 @@ class ExpenseManager
       echo "Expense added successfully. (ID: " . $expense->getId() . ")" . PHP_EOL;
       $this->checkBudget($amount);
    }
-
-   public function updateExpense($id, $amount, $description)
+   
+   public function updateExpense($id, $amount = null, $description = null, $category = null)
    {
-      if (empty($id) || empty($amount) || empty($description)) {
-         echo "ID, amount, and description are required." . PHP_EOL;
+      if (empty($id)) {
+         echo "ID is required." . PHP_EOL;
          return;
       }
-
-      if (!is_numeric($id) || !is_numeric($amount)) {
-         echo "ID and amount must be numbers." . PHP_EOL;
+      
+      if (!is_numeric($id)) {
+         echo "ID must be a number." . PHP_EOL;
          return;
       }
-
-      if ($amount <= 0) {
-         echo "Amount must be greater than zero." . PHP_EOL;
-         return;
-      }
-
+      
       $expense = array_filter($this->expenses, function ($expense) use ($id) {
          return $expense->getId() == $id;
       });
-
+      
       if (empty($expense)) {
          echo "Expense with ID $id not found." . PHP_EOL;
          return;
       }
 
       $expense = reset($expense);
-      $expense->setDescription($description);
-      $expense->setAmount($amount);
-
+      
+      // Update only the provided fields
+      if ($description !== null) {
+         $expense->setDescription($description);
+      }
+      
+      if ($amount !== null) {
+         if (!is_numeric($amount) || $amount <= 0) {
+            echo "Amount must be a positive number." . PHP_EOL;
+            return;
+         }
+         $expense->setAmount($amount);
+      }
+      
+      if ($category !== null) {
+         $expense->setCategory(strtolower($category));
+      }
+      
       if (!$this->saveExpensesToFile()) {
          echo "Failed to save expenses to file." . PHP_EOL;
          return;
       }
-
+      
       echo "Expense updated successfully. (ID: " . $expense->getId() . ")" . PHP_EOL;
    }
-
+   
    public function deleteExpense($id)
    {
       if (empty($id)) {
