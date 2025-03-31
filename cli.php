@@ -29,6 +29,10 @@ try {
          $parser->getCategory()
       ),
       CommandType::SUMMARY => $expenseManager->getSummary($parser->getMonth()),
+      CommandType::SET_BUDGET => $expenseManager->setBudget(
+         $parser->getAmount(),
+         $parser->getMonth()
+      ),
       default => print("Invalid command. Use '--help' for more information.\n"),
    };
 } catch (ValueError $e) {

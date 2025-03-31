@@ -6,7 +6,9 @@ include_once 'ExpenseDisplay.php';
 class ExpenseManager
 {
    private $expenses = [];
-   private $filePath = 'expenses.json';
+   private $budget = null;
+   private $expenseFilePath = 'expenses.json';
+   private $budgetFilePath = 'budget.json';
 
    public function __construct()
    {
@@ -15,11 +17,15 @@ class ExpenseManager
 
    private function loadExpenses()
    {
-      if (!file_exists($this->filePath)) {
-         file_put_contents($this->filePath, json_encode([]));
+      if (!file_exists($this->expenseFilePath)) {
+         file_put_contents($this->expenseFilePath, json_encode([]));
       }
 
-      $expenses = json_decode(file_get_contents($this->filePath), true);
+      if (!file_exists($this->budgetFilePath)) {
+         file_put_contents($this->budgetFilePath, json_encode([]));
+      }
+
+      $expenses = json_decode(file_get_contents($this->expenseFilePath), true);
 
       $this->expenses = array_map(function ($expense) {
          return new Expense(
@@ -36,7 +42,7 @@ class ExpenseManager
    {
       $data = array_map(fn(Expense $expense) => $expense->__toArray(), $this->expenses);
       $json = json_encode(array_values($data), JSON_PRETTY_PRINT);
-      return file_put_contents($this->filePath, $json) !== false;
+      return file_put_contents($this->expenseFilePath, $json) !== false;
    }
 
    public function addExpense($amount, $description, $category = null)
@@ -55,7 +61,7 @@ class ExpenseManager
          echo "Amount must be greater than zero." . PHP_EOL;
          return;
       }
-
+      
       $id = count($this->expenses) > 0 ? end($this->expenses)->getId() + 1 : 1;
       $expense = new Expense(
          $id,
@@ -63,15 +69,16 @@ class ExpenseManager
          $amount,
          $category
       );
-
+      
       $this->expenses[] = $expense;
-
+      
       if (!$this->saveExpensesToFile()) {
          echo "Failed to save expenses to file." . PHP_EOL;
          return;
       }
-
+      
       echo "Expense added successfully. (ID: " . $expense->getId() . ")" . PHP_EOL;
+      $this->checkBudget($amount);
    }
 
    public function updateExpense($id, $amount, $description)
@@ -173,7 +180,6 @@ class ExpenseManager
       $currentYear = date('Y');
       $filteredExpenses = $this->expenses;
 
-      // Filter expenses by month if a month is provided
       if ($month !== null) {
          if ($month < 1 || $month > 12) {
             echo "Invalid month. Please provide a month between 1 and 12." . PHP_EOL;
@@ -204,5 +210,96 @@ class ExpenseManager
       }
 
       echo "Total expenses: $" . number_format($total, 2) . PHP_EOL;
+   }
+
+   public function setBudget($amount, $month)
+   {
+      if (empty($amount) || empty($month)) {
+         echo "Amount and month are required." . PHP_EOL;
+         return;
+      }
+
+      if (!is_numeric($amount)) {
+         echo "Amount must be a number." . PHP_EOL;
+         return;
+      }
+
+      if ($amount <= 0) {
+         echo "Amount must be greater than zero." . PHP_EOL;
+         return;
+      }
+
+      if ($month < 1 || $month > 12) {
+         echo "Invalid month. Please provide a month between 1 and 12." . PHP_EOL;
+         return;
+      }
+
+      $month = str_pad($month, 2, '0', STR_PAD_LEFT);
+      $currentYear = date('Y');
+
+      // Ensure $budgets is an array
+      $budgets = json_decode(file_get_contents($this->budgetFilePath), true);
+      if (!is_array($budgets)) {
+         $budgets = [];
+      }
+
+      // Check if a budget already exists for the given month and year
+      $existingBudget = array_filter($budgets, function ($item) use ($month, $currentYear) {
+         return $item['month'] == $month && $item['year'] == $currentYear;
+      });
+
+      if (!empty($existingBudget)) {
+         echo "Budget already set for month $month." . PHP_EOL;
+         return;
+      }
+
+      // Add the new budget
+      $budget = [
+         'month' => $month,
+         'year' => $currentYear,
+         'amount' => $amount
+      ];
+
+      $budgets[] = $budget;
+
+      // Save the updated budgets to the file
+      file_put_contents($this->budgetFilePath, json_encode($budgets, JSON_PRETTY_PRINT));
+      echo "Budget set successfully for month $month: $" . number_format($amount, 2) . PHP_EOL;
+   }
+
+   public function checkBudget($amount)
+   {
+      $currentMonth = date('m');
+      $currentYear = date('Y');
+
+      // Load the budget for the current month
+      $budgets = json_decode(file_get_contents($this->budgetFilePath), true);
+      if (is_array($budgets)) {
+         foreach ($budgets as $budget) {
+            if ($budget['month'] == $currentMonth && $budget['year'] == $currentYear) {
+               $this->budget = $budget['amount'];
+               break;
+            }
+         }
+      }
+
+      if ($this->budget === null) {
+         return; // No budget set for the current month
+      }
+
+      // Calculate the total expenses for the current month
+      $monthlyExpenses = array_filter($this->expenses, function ($expense) use ($currentMonth, $currentYear) {
+         $expenseDate = DateTime::createFromFormat('Y-m-d', $expense->getDate());
+         return $expenseDate && $expenseDate->format('Y') == $currentYear && $expenseDate->format('m') == $currentMonth;
+      });
+
+      $total = array_reduce($monthlyExpenses, function ($carry, $expense) {
+         return $carry + $expense->getAmount();
+      }, 0);
+
+      // Check if the total exceeds the budget
+      if ($total > $this->budget) {
+         echo "Warning: You have exceeded your budget of $" . number_format($this->budget, 2) . " for this month!" . PHP_EOL;
+      }
    }
 }

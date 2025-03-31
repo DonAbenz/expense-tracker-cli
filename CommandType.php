@@ -7,5 +7,6 @@ enum CommandType: string
    case DELETE = 'delete';
    case LIST = 'list';
    case SUMMARY = 'summary';
+   case SET_BUDGET = 'set-budget';
    case HELP = '--help';
 }
