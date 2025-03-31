@@ -33,9 +33,9 @@ class ExpenseManager
 
    private function saveExpensesToFile()
    {
-      file_put_contents($this->filePath, json_encode(array_map(function ($expense) {
-         return $expense->__toArray();
-      }, $this->expenses), JSON_PRETTY_PRINT));
+      $data = array_map(fn(Expense $expense) => $expense->__toArray(), $this->expenses);
+      $json = json_encode(array_values($data), JSON_PRETTY_PRINT);
+      return file_put_contents($this->filePath, $json) !== false;
    }
 
    public function addExpense($amount, $description)
@@ -64,7 +64,10 @@ class ExpenseManager
 
       $this->expenses[] = $expense;
 
-      $this->saveExpensesToFile();
+      if (!$this->saveExpensesToFile()) {
+         echo "Failed to save expenses to file." . PHP_EOL;
+         return;
+      }
 
       echo "Expense added successfully. (ID: " . $expense->getId() . ")" . PHP_EOL;
    }
@@ -99,9 +102,45 @@ class ExpenseManager
       $expense->setDescription($description);
       $expense->setAmount($amount);
 
-      $this->saveExpensesToFile();
+      if (!$this->saveExpensesToFile()) {
+         echo "Failed to save expenses to file." . PHP_EOL;
+         return;
+      }
 
       echo "Expense updated successfully. (ID: " . $expense->getId() . ")" . PHP_EOL;
+   }
+
+   public function deleteExpense($id)
+   {
+      if (empty($id)) {
+         echo "ID is required." . PHP_EOL;
+         return;
+      }
+
+      if (!is_numeric($id)) {
+         echo "ID must be a number." . PHP_EOL;
+         return;
+      }
+
+      $expense = array_filter($this->expenses, function ($expense) use ($id) {
+         return $expense->getId() == $id;
+      });
+
+      if (empty($expense)) {
+         echo "Expense with ID $id not found." . PHP_EOL;
+         return;
+      }
+
+      $this->expenses = array_filter($this->expenses, function ($expense) use ($id) {
+         return $expense->getId() != $id;
+      });
+
+      if (!$this->saveExpensesToFile()) {
+         echo "Failed to save expenses to file." . PHP_EOL;
+         return;
+      }
+
+      echo "Expense deleted successfully." . PHP_EOL;
    }
 
    public function getAllExpenses()

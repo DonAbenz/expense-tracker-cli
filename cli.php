@@ -22,6 +22,7 @@ try {
          $parser->getAmount(),
          $parser->getDescription()
       ),
+      CommandType::DELETE => $expenseManager->deleteExpense($parser->getId()),
       CommandType::LIST => $expenseManager->getAllExpenses(),
       default => print("Invalid command. Use '--help' for more information.\n"),
    };
