@@ -31,6 +31,13 @@ class ExpenseManager
       }, $expenses);
    }
 
+   private function saveExpensesToFile()
+   {
+      file_put_contents($this->filePath, json_encode(array_map(function ($expense) {
+         return $expense->__toArray();
+      }, $this->expenses), JSON_PRETTY_PRINT));
+   }
+
    public function addExpense($amount, $description)
    {
       if (empty($amount) || empty($description)) {
@@ -57,11 +64,44 @@ class ExpenseManager
 
       $this->expenses[] = $expense;
 
-      file_put_contents($this->filePath, json_encode(array_map(function ($expense) {
-         return $expense->__toArray();
-      }, $this->expenses), JSON_PRETTY_PRINT));
+      $this->saveExpensesToFile();
 
       echo "Expense added successfully. (ID: " . $expense->getId() . ")" . PHP_EOL;
+   }
+
+   public function updateExpense($id, $amount, $description)
+   {
+      if (empty($id) || empty($amount) || empty($description)) {
+         echo "ID, amount, and description are required." . PHP_EOL;
+         return;
+      }
+
+      if (!is_numeric($id) || !is_numeric($amount)) {
+         echo "ID and amount must be numbers." . PHP_EOL;
+         return;
+      }
+
+      if ($amount <= 0) {
+         echo "Amount must be greater than zero." . PHP_EOL;
+         return;
+      }
+
+      $expense = array_filter($this->expenses, function ($expense) use ($id) {
+         return $expense->getId() == $id;
+      });
+
+      if (empty($expense)) {
+         echo "Expense with ID $id not found." . PHP_EOL;
+         return;
+      }
+
+      $expense = reset($expense);
+      $expense->setDescription($description);
+      $expense->setAmount($amount);
+
+      $this->saveExpensesToFile();
+
+      echo "Expense updated successfully. (ID: " . $expense->getId() . ")" . PHP_EOL;
    }
 
    public function getAllExpenses()

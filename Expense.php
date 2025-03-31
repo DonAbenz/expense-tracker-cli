@@ -34,6 +34,15 @@ class Expense
          }
       }
 
+      if (str_starts_with($name, 'set')) {
+         $property = lcfirst(substr($name, 3));
+
+         if (property_exists($this, $property)) {
+            $this->$property = $arguments[0];
+            return;
+         }
+      }
+
       throw new BadMethodCallException("Method $name does not exist.");
    }
 }
