@@ -4,10 +4,12 @@ class Expense
 {
    public function __construct(
       private int $id,
-      private string $date,
       private string $description,
-      private float $amount
-   ) {}
+      private float $amount,
+      private ?string $date = null,
+   ) {
+      $this->date = $date ?? date('Y-m-d');
+   }
 
    public function __toArray(): array
    {
@@ -20,5 +22,18 @@ class Expense
       }
 
       return $formattedArray;
+   }
+
+   public function __call(string $name, array $arguments)
+   {
+      if (str_starts_with($name, 'get')) {
+         $property = lcfirst(substr($name, 3));
+
+         if (property_exists($this, $property)) {
+            return $this->$property;
+         }
+      }
+
+      throw new BadMethodCallException("Method $name does not exist.");
    }
 }

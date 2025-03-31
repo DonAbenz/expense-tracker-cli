@@ -1,8 +1,14 @@
 [
-   {
-      "id": 1,
-      "date": "2023-10-01",
-      "description": "Groceries",
-      "amount": 150.75
-   }
+    {
+        "id": 1,
+        "description": "Groceries",
+        "amount": 150.75,
+        "date": "2023-10-01"
+    },
+    {
+        "id": 2,
+        "description": "Lunch",
+        "amount": 10,
+        "date": "2025-03-31"
+    }
 ]

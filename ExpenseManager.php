@@ -1,6 +1,7 @@
 <?php
 
 include_once 'Expense.php';
+include_once 'ExpenseDisplay.php';
 
 class ExpenseManager
 {
@@ -19,14 +20,48 @@ class ExpenseManager
       }
 
       $expenses = json_decode(file_get_contents($this->filePath), true);
-      foreach ($expenses as $expense) {
-         array_push($this->expenses, new Expense(
+
+      $this->expenses = array_map(function ($expense) {
+         return new Expense(
             $expense['id'],
-            $expense['date'],
             $expense['description'],
-            $expense['amount']
-         ));
+            $expense['amount'],
+            $expense['date']
+         );
+      }, $expenses);
+   }
+
+   public function addExpense($amount, $description)
+   {
+      if (empty($amount) || empty($description)) {
+         echo "Amount and description are required." . PHP_EOL;
+         return;
       }
+
+      if (!is_numeric($amount)) {
+         echo "Amount must be a number." . PHP_EOL;
+         return;
+      }
+
+      if ($amount <= 0) {
+         echo "Amount must be greater than zero." . PHP_EOL;
+         return;
+      }
+
+      $id = count($this->expenses) > 0 ? end($this->expenses)->getId() + 1 : 1;
+      $expense = new Expense(
+         $id,
+         $description,
+         $amount
+      );
+
+      $this->expenses[] = $expense;
+
+      file_put_contents($this->filePath, json_encode(array_map(function ($expense) {
+         return $expense->__toArray();
+      }, $this->expenses), JSON_PRETTY_PRINT));
+
+      echo "Expense added successfully. (ID: " . $expense->getId() . ")" . PHP_EOL;
    }
 
    public function getAllExpenses()
@@ -36,54 +71,6 @@ class ExpenseManager
          return;
       }
 
-      $this->displayExpenses($this->expenses);
-   }
-
-   private function displayExpenses(array $expenses): void
-   {
-      $headers = ['id', 'date', 'description', 'amount'];
-      $widths = $this->calculateColumnWidths($expenses, $headers);
-
-      $this->printSeparatorLine($widths);
-      $this->printRow($headers, $widths);
-      $this->printSeparatorLine($widths);
-
-      foreach ($expenses as $expense) {
-         $row = $expense->__toArray();
-         $rowData = array_map(fn($header) => $row[$header], $headers);
-         $this->printRow($rowData, $widths);
-      }
-
-      $this->printSeparatorLine($widths);
-   }
-
-   private function calculateColumnWidths(array $expenses, array $headers): array
-   {
-      return array_map(function ($header) use ($expenses) {
-         $maxLength = strlen($header);
-         foreach ($expenses as $expense) {
-            $row = $expense->__toArray();
-            $maxLength = max($maxLength, strlen((string) $row[$header]));
-         }
-         return $maxLength;
-      }, $headers);
-   }
-
-   private function printSeparatorLine(array $widths): void
-   {
-      echo '+';
-      foreach ($widths as $width) {
-         echo str_repeat('-', $width + 2) . '+';
-      }
-      echo PHP_EOL;
-   }
-
-   private function printRow(array $row, array $widths): void
-   {
-      echo '|';
-      foreach ($row as $key => $value) {
-         printf(" %-{$widths[$key]}s |", $value);
-      }
-      echo PHP_EOL;
+      ExpenseDisplay::print($this->expenses);
    }
 }
